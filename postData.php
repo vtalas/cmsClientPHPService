@@ -1,5 +1,5 @@
 <?php 
-require  'libs.php';
+require  'libs/libs.php';
 require  'config.php';
 session_start();
 

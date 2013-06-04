@@ -1,6 +1,6 @@
 <?php 
 session_start();
-require  'libs.php';
+require  'libs/libs.php';
 
 //todo call server logout
 $_SESSION["oauth"] = null;
