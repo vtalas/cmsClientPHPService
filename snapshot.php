@@ -1,5 +1,7 @@
 <?php 
 require  'libs/libs.php';
+$basepath = "../../snapshots";
+
 
 function saveToFile($destination, $content)
 {
@@ -9,10 +11,17 @@ function saveToFile($destination, $content)
 
 $data = json_decode(file_get_contents('php://input'));
 $content = isset($data->{"data"}) ? $data->{"data"} : null;
-$destination = isset($data->{"path"}) ? $data->{"path"} : null;
+$destination = isset($data->{"path"}) ? $data->{"path"} : "";
 
-saveToFile("snapshots".$destination, $content);
+$stack = explode('/', $destination);
+$filename = array_pop($stack);
 
-preprint($content);
+$directory = $basepath.implode('/', $stack);
+
+if (!file_exists($directory)) {
+    mkdir($directory, 0777, true);
+}
+
+saveToFile($directory.'/'.$filename.'.html', $content);
 
 ?>

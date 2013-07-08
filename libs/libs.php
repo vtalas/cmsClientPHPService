@@ -73,12 +73,12 @@ function getContent($url, $method=CURLOPT_HTTPGET, $formdata=null) {
 	$header = curl_getinfo($ch, CURLINFO_HEADER_OUT);
 
 	header($_SERVER["SERVER_PROTOCOL"]." ".$http_status);
-//preprint(curl_error ($ch ));
 
 	curl_close($ch);
 	$response["content"] = $data;
 	$response["status"] = $http_status;
-	//preprint($response);
+
+
 	return $response;
 }
 

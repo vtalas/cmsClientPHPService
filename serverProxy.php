@@ -8,7 +8,7 @@ try {
 	$id = isset($_GET["id"]) ? $_GET["id"] : null ;
 	$u = resolve(BASE_URL, $action, $id);
 	$rs = getContent($u);
-	echo $rs["content"];
+	echo '{ "data": '.$rs["content"].' , "snapshot": 1 }';
 }
 catch(Exception $ex) {
 	echo ExceptionToJson($ex, error_get_last());
