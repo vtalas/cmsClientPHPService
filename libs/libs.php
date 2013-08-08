@@ -56,6 +56,11 @@ function getContent($url, $method=CURLOPT_HTTPGET, $formdata=null) {
 	curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
 	curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $timeout);
 	curl_setopt($ch, CURLINFO_HEADER_OUT, 1);
+
+	curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+	curl_setopt($ch, CURLOPT_VERBOSE, 1);
+	curl_setopt($ch, CURLOPT_HEADER, 1);
+	
 	curl_setopt($ch, $method, 1);
 	
 	if ($formdata != null) {
@@ -67,17 +72,28 @@ function getContent($url, $method=CURLOPT_HTTPGET, $formdata=null) {
 		curl_setopt($ch, CURLOPT_COOKIE, $oauthCookie);
 	}
 
+//	curl_setopt($ch, CURLOPT_HTTPHEADER, getallheaders()); 
+//	curl_setopt($ch, CURLOPT_HTTPHEADER, array('If-None-Match: "b9e16290-48fb-4c08-84f1-7a82a68a6bb6"')); 
+
+	
+	preprint(getallheaders());
 
 	$data = curl_exec($ch);
+	list($header, $body) = explode("\r\n\r\n", $data, 2);
+
 	$http_status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-	$header = curl_getinfo($ch, CURLINFO_HEADER_OUT);
 
-	header($_SERVER["SERVER_PROTOCOL"]." ".$http_status);
+	$headersArray = explode("\r\n", $header);
 
-	curl_close($ch);
-	$response["content"] = $data;
-	$response["status"] = $http_status;
+	$etag = explode(": ", $headersArray[5]);
+	header($headersArray[0]);
+	header($headersArray[5]);
+	header($headersArray[6]);
+	//header($_SERVER["SERVER_PROTOCOL"]." ".$http_status);
 
+	$response["cache_version"] = $etag[1];
+	$response["content"] = $body;
+	//$response["status"] = $http_status;
 
 	return $response;
 }
