@@ -46,8 +46,28 @@ function curPageURL() {
 	return $pageURL;
 }
 
+function parse_response($response)
+{
+    $headers = array();
+
+	list($header_text, $body) = explode("\r\n\r\n", $response, 2);
+
+    foreach (explode("\r\n", $header_text) as $i => $line)
+        if ($i === 0)
+            $headers['http_code'] = $line;
+        else
+        {
+            list ($key, $value) = explode(': ', $line);
+
+            $headers[$key] = $value;
+        }
+
+    return array('body' => $body, 'header' => $headers);
+}
+
 function getContent($url, $method=CURLOPT_HTTPGET, $formdata=null) {
 	$oauthCookie = getCookieFromSession();
+	$requestHeaders = $arrayName = array();
 
 	$ch = curl_init();
 	$timeout = 5;
@@ -64,36 +84,35 @@ function getContent($url, $method=CURLOPT_HTTPGET, $formdata=null) {
 	curl_setopt($ch, $method, 1);
 	
 	if ($formdata != null) {
-		curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json;charset=UTF-8')); 
+		array_push($requestHeaders, 'Content-Type: application/json;charset=UTF-8');
 		curl_setopt($ch, CURLOPT_POSTFIELDS, $formdata);
 	}
 
 	if ($oauthCookie !=  null) {
 		curl_setopt($ch, CURLOPT_COOKIE, $oauthCookie);
 	}
+	$g = getallheaders();
 
-//	curl_setopt($ch, CURLOPT_HTTPHEADER, getallheaders()); 
-//	curl_setopt($ch, CURLOPT_HTTPHEADER, array('If-None-Match: "b9e16290-48fb-4c08-84f1-7a82a68a6bb6"')); 
+	//preprint(getallheaders());
 
-	
-	preprint(getallheaders());
+	if (array_key_exists ("If-None-Match",$g)) { 
+		array_push($requestHeaders, 'If-None-Match: '.$g["If-None-Match"]);
+	}
 
+	curl_setopt($ch, CURLOPT_HTTPHEADER, $requestHeaders); 
 	$data = curl_exec($ch);
-	list($header, $body) = explode("\r\n\r\n", $data, 2);
+	
 
-	$http_status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
-	$headersArray = explode("\r\n", $header);
+	$parserdData = parse_response($data);
+	$responseHeader = $parserdData["header"];
+	header("Etag: ".$responseHeader["ETag"]);
+	header("Cache-Control: ".$responseHeader["Cache-Control"]);
+	header($responseHeader["http_code"]);
+	
+	//preprint($responseHeader);
 
-	$etag = explode(": ", $headersArray[5]);
-	header($headersArray[0]);
-	header($headersArray[5]);
-	header($headersArray[6]);
-	//header($_SERVER["SERVER_PROTOCOL"]." ".$http_status);
-
-	$response["cache_version"] = $etag[1];
-	$response["content"] = $body;
-	//$response["status"] = $http_status;
+	$response["content"] = $parserdData["body"];
 
 	return $response;
 }
