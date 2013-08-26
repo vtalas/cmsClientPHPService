@@ -49,7 +49,6 @@ function curPageURL() {
 function parse_response($response)
 {
     $headers = array();
-
 	list($header_text, $body) = explode("\r\n\r\n", $response, 2);
 
     foreach (explode("\r\n", $header_text) as $i => $line)
@@ -91,7 +90,7 @@ function getContent($url, $method=CURLOPT_HTTPGET, $formdata=null) {
 	if ($oauthCookie !=  null) {
 		curl_setopt($ch, CURLOPT_COOKIE, $oauthCookie);
 	}
-	$g = getallheaders();
+	$g = apache_request_headers();
 
 	//preprint(getallheaders());
 
@@ -102,7 +101,10 @@ function getContent($url, $method=CURLOPT_HTTPGET, $formdata=null) {
 	curl_setopt($ch, CURLOPT_HTTPHEADER, $requestHeaders); 
 	$data = curl_exec($ch);
 	
-
+	if (!$data) {
+		header(':', true, 500);
+		return;
+	}
 
 	$parserdData = parse_response($data);
 	$responseHeader = $parserdData["header"];
