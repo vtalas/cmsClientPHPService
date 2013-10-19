@@ -65,10 +65,11 @@ function parse_response($response)
     return array('body' => $body, 'header' => $headers);
 }
 
-function getContent($url, $method=CURLOPT_HTTPGET, $formdata=null) {
-	$oauthCookie = getCookieFromSession();
 	$requestHeaders = $arrayName = array();
 
+
+function initRequest($url, $method)
+{
 	$ch = curl_init();
 	$timeout = 5;
 
@@ -82,6 +83,23 @@ function getContent($url, $method=CURLOPT_HTTPGET, $formdata=null) {
 	curl_setopt($ch, CURLOPT_HEADER, 1);
 	
 	curl_setopt($ch, $method, 1);
+
+	return $ch;
+}
+
+
+function setResponseHeader($responseHeader, $key)
+{
+	if (array_key_exists ($key, $responseHeader)) { 
+		header($key.": ".$responseHeader[$key]);
+	}
+}
+
+function getContent($url, $method=CURLOPT_HTTPGET, $formdata=null) {
+	$oauthCookie = getCookieFromSession();
+	$requestHeaders = $arrayName = array();
+
+	$ch = initRequest($url, $method);
 	
 	if ($formdata != null) {
 		array_push($requestHeaders, 'Content-Type: application/json;charset=UTF-8');
@@ -91,6 +109,7 @@ function getContent($url, $method=CURLOPT_HTTPGET, $formdata=null) {
 	if ($oauthCookie !=  null) {
 		curl_setopt($ch, CURLOPT_COOKIE, $oauthCookie);
 	}
+
 	$g = getallheaders();
 
 	//preprint(getallheaders());
@@ -100,20 +119,20 @@ function getContent($url, $method=CURLOPT_HTTPGET, $formdata=null) {
 	}
 
 	curl_setopt($ch, CURLOPT_HTTPHEADER, $requestHeaders); 
-	$data = curl_exec($ch);
-	
 
+	$data = curl_exec($ch);
 
 	$parserdData = parse_response($data);
 	$responseHeader = $parserdData["header"];
-	header("Etag: ".$responseHeader["ETag"]);
-	header("Cache-Control: ".$responseHeader["Cache-Control"]);
+
+	setResponseHeader($responseHeader, "ETag");
+	setResponseHeader($responseHeader, "Cache-Control" );
+	
 	header($responseHeader["http_code"]);
 	
 	//preprint($responseHeader);
 
 	$response["content"] = $parserdData["body"];
-
 	return $response;
 }
 
