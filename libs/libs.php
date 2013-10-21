@@ -64,6 +64,14 @@ function parse_response($response)
     return array('body' => $body, 'header' => $headers);
 }
 
+function getArrayProperty($array, $property)
+{
+	if (isset($array[$property])) {
+		return $array[$property];
+	}
+	return null;
+}
+
 function getContent($url, $method=CURLOPT_HTTPGET, $formdata=null) {
 	$oauthCookie = getCookieFromSession();
 	$requestHeaders = $arrayName = array();
@@ -108,13 +116,15 @@ function getContent($url, $method=CURLOPT_HTTPGET, $formdata=null) {
 
 	$parserdData = parse_response($data);
 	$responseHeader = $parserdData["header"];
-	header("Etag: ".$responseHeader["ETag"]);
+
+	header("Etag: ".getArrayProperty($responseHeader, "ETag"));
 	header("Cache-Control: ".$responseHeader["Cache-Control"]);
 	header($responseHeader["http_code"]);
 	
 	//preprint($responseHeader);
+	//preprint($parserdData);
 
-	$response["content"] = $parserdData["body"];
+	$response["content"] = $parserdData["body"] != null ? $parserdData["body"] : null;
 
 	return $response;
 }
