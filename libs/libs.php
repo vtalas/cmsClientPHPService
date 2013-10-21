@@ -49,6 +49,7 @@ function curPageURL() {
 function parse_response($response)
 {
     $headers = array();
+
 	list($header_text, $body) = explode("\r\n\r\n", $response, 2);
 
     foreach (explode("\r\n", $header_text) as $i => $line)
@@ -64,18 +65,11 @@ function parse_response($response)
     return array('body' => $body, 'header' => $headers);
 }
 
-function getArrayProperty($array, $property)
-{
-	if (isset($array[$property])) {
-		return $array[$property];
-	}
-	return null;
-}
-
-function getContent($url, $method=CURLOPT_HTTPGET, $formdata=null) {
-	$oauthCookie = getCookieFromSession();
 	$requestHeaders = $arrayName = array();
 
+
+function initRequest($url, $method)
+{
 	$ch = curl_init();
 	$timeout = 5;
 
@@ -89,6 +83,23 @@ function getContent($url, $method=CURLOPT_HTTPGET, $formdata=null) {
 	curl_setopt($ch, CURLOPT_HEADER, 1);
 	
 	curl_setopt($ch, $method, 1);
+
+	return $ch;
+}
+
+
+function setResponseHeader($responseHeader, $key)
+{
+	if (array_key_exists ($key, $responseHeader)) { 
+		header($key.": ".$responseHeader[$key]);
+	}
+}
+
+function getContent($url, $method=CURLOPT_HTTPGET, $formdata=null) {
+	$oauthCookie = getCookieFromSession();
+	$requestHeaders = $arrayName = array();
+
+	$ch = initRequest($url, $method);
 	
 	if ($formdata != null) {
 		array_push($requestHeaders, 'Content-Type: application/json;charset=UTF-8');
@@ -98,7 +109,8 @@ function getContent($url, $method=CURLOPT_HTTPGET, $formdata=null) {
 	if ($oauthCookie !=  null) {
 		curl_setopt($ch, CURLOPT_COOKIE, $oauthCookie);
 	}
-	$g = apache_request_headers();
+
+	$g = getallheaders();
 
 	//preprint(getallheaders());
 
@@ -107,25 +119,20 @@ function getContent($url, $method=CURLOPT_HTTPGET, $formdata=null) {
 	}
 
 	curl_setopt($ch, CURLOPT_HTTPHEADER, $requestHeaders); 
+
 	$data = curl_exec($ch);
-	
-	if (!$data) {
-		header(':', true, 500);
-		return;
-	}
 
 	$parserdData = parse_response($data);
 	$responseHeader = $parserdData["header"];
 
-	header("Etag: ".getArrayProperty($responseHeader, "ETag"));
-	header("Cache-Control: ".$responseHeader["Cache-Control"]);
+	setResponseHeader($responseHeader, "ETag");
+	setResponseHeader($responseHeader, "Cache-Control" );
+	
 	header($responseHeader["http_code"]);
 	
 	//preprint($responseHeader);
-	//preprint($parserdData);
 
-	$response["content"] = $parserdData["body"] != null ? $parserdData["body"] : null;
-
+	$response["content"] = $parserdData["body"];
 	return $response;
 }
 
