@@ -17,7 +17,9 @@ try {
 	$u = resolve(BASE_URL, $action, $id, $_GET);
 
 	$rs = getContent($u);
-	echo '{ "data": '.$rs["content"].' , "snapshot": 1 }';
+	if (isset($rs["content"])) {
+		echo '{ "data": '.$rs["content"].' , "snapshot": 1 }';
+	}
 }
 catch(Exception $ex) {
 	echo ExceptionToJson($ex, error_get_last());

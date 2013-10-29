@@ -132,7 +132,7 @@ function getContent($url, $method=CURLOPT_HTTPGET, $formdata=null) {
 	
 	//preprint($responseHeader);
 
-	$response["content"] = $parserdData["body"];
+	$response["content"] = $parserdData["body"] != null ? $parserdData["body"] : null;
 	return $response;
 }
 
