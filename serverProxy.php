@@ -4,9 +4,18 @@ require  'config.php';
 session_start();
 
 try {
-	$action = isset($_GET["action"]) ? $_GET["action"] : null ;
-	$id = isset($_GET["id"]) ? $_GET["id"] : null ;
-	$u = resolve(BASE_URL, $action, $id);
+	$action = null;
+	if (isset($_GET["action"])) {
+		$action = $_GET["action"];
+		unset($_GET["action"]);
+	}
+	$id = null;
+	if (isset($_GET["id"])) {
+		$id = $_GET["id"];
+		unset($_GET["id"]);
+	}
+	$u = resolve(BASE_URL, $action, $id, $_GET);
+
 	$rs = getContent($u);
 	echo '{ "data": '.$rs["content"].' , "snapshot": 1 }';
 }

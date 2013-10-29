@@ -167,11 +167,14 @@ function getContentXX($url, $method, $formcontent=null)
 }
 
 
-function resolve($baseurl, $action, $id=null)
+function resolve($baseurl, $action, $id=null, $get=null)
 {
 	$baseurl = $baseurl."/".$action;
 	if ($id != null) {
 		$baseurl = $baseurl."/".$id;
+		if ($get != null) {
+			$baseurl = $baseurl."?".http_build_query ($get);
+		}
 	}
 	return $baseurl;
 }
